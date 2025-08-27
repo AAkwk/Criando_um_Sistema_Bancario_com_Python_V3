@@ -1,8 +1,9 @@
-from abc import ABC, abstractclassmethod, abstractproperty
+import textwrap
+from abc import ABC, abstractmethod, abstractproperty
 from datetime import datetime
 
 class Cliente:
-    def __init__(self):
+    def __init__(self, endereco):
         self.endereco = endereco
         self.contas = []
 
@@ -55,6 +56,7 @@ class Conta:
         saldo = self.saldo
         if valor > saldo:
             print("Operação falhou! Saldo insuficiente.")
+            return False
         
         elif valor > 0:
             self._saldo -= valor
@@ -63,44 +65,41 @@ class Conta:
 
         else:
             print("Operação falhou! O valor informado é inválido.")
-
-        return False
+            return False
     
     def depositar(self, valor):
         if valor > 0:
             self._saldo += valor
             print(f"Depósito de R$ {valor:.2f} realizado com sucesso!")
+            return True
         else:
             print("Operação falhou! O valor do depósito deve ser positivo.")
             return False
-
-        return True
     
 class ContaCorrente(Conta):
 
-    def __init__(self, numero, cliente, limite=500, l_saques=3):
+    def __init__(self, numero, cliente, limite=500, limite_saques=3):
         super().__init__(numero, cliente)
         self.limite = limite
-        self.l_saques = l_saques
+        self.limite_saques = limite_saques
 
     def sacar(self, valor):
         n_saques = len([transacao for transacao in self.historico.transacoes if transacao["tipo"] == Saque.__name__])
         
         if valor > self.limite:
             print("Operação falhou! O valor excede o limite de R$ 500,00 por saque.")
+            return False
 
-        elif n_saques >= self.l_saques:
+        elif n_saques >= self.limite_saques:
             print("Operação falhou! Limite diário de 3 saques atingido.")
+            return False
         else:
             return super().sacar(valor)
-        
-        return False
     
     def __str__(self):
-        return f"""\ Agência:\t{self.agencia} C/C:\t\t{self.numero}Titular:\t{self.cliente.nome}"""
+        return f"""Agência:\t{self.agencia}\nC/C:\t\t{self.numero}\nTitular:\t{self.cliente.nome}"""
 
 class Historico():
-
     def __init__(self):
         self._transacoes = []
 
@@ -113,10 +112,9 @@ class Historico():
             {
                 "tipo": transacao.__class__.__name__,
                 "valor": transacao.valor,
-                "data": datatime.now().strftime("%d-%m-%Y %H:%M:%s")
-            }    
+                "data": datetime.now().strftime("%d-%m-%Y %H:%M:%S"),
+            }
         )
-
 
 class Transacao(ABC):
     @property
@@ -124,7 +122,7 @@ class Transacao(ABC):
     def valor(self):
         pass
 
-    @abstractclassmethod
+    @abstractmethod
     def registrar(self, conta):
         pass
 
